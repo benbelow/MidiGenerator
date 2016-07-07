@@ -12,7 +12,6 @@ var aeolianSteps = [2, 1, 2, 2, 1, 2, 2];
 var locrianSteps = [1, 2, 2, 1, 2, 2, 2];
 
 
-
 function Scale(steps, root) {
     this.steps = steps;
     this.root = root;
@@ -20,7 +19,7 @@ function Scale(steps, root) {
         var scaleNotes = [this.root];
         for (var i = 0; i < this.steps.length; i++) {
             var lastNote = scaleNotes.slice(-1)[0];
-            var newNote = new notes.Pitch(lastNote.note, lastNote.octave);
+            var newNote = notes.duplicatePitch(lastNote);
             newNote.addSemitones(this.steps[i]);
             scaleNotes.push(newNote);
         }
@@ -38,29 +37,37 @@ function Scale(steps, root) {
 }
 
 function midiNote(note, duration) {
-    return new MidiWriter.NoteEvent({pitch: [note], duration: duration, sequential: true});
+    return new MidiWriter.NoteEvent({pitch: [note.noteString()], duration: duration, sequential: true});
 }
 
 function midiPhrase(notes, duration) {
-    return new MidiWriter.NoteEvent({pitch: notes, duration: duration, sequential: true});
+    return new MidiWriter.NoteEvent({
+        pitch: notes.map(function (x) {
+            return x.noteString();
+        }), duration: duration, sequential: true
+    });
 }
 
 function midiChord(notes, duration) {
-    return new MidiWriter.NoteEvent({pitch: notes, duration: duration, sequential: false});
+    return new MidiWriter.NoteEvent({
+        pitch: notes.map(function (x) {
+            return x.noteString();
+        }), duration: duration, sequential: false
+    });
 }
 
 exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
 
-    var root = new notes.Pitch("C#", 4);
-    var scale = new Scale(dorianSteps, root);
+    var root = new notes.Pitch("C", 4);
+    var scale = new Scale(mixolydianSteps, root);
 
     for (var i = 0; i < scale.getLength(); i++) {
         var note = scale.getRandomNote();
         var duration = getRandomElementOfArray(DURATIONS);
-        track.addEvent(midiNote(note.noteString(), duration));
-        track.addEvent(midiChord(chords.chordNotes("C","Maj"), 4));
+        track.addEvent(midiNote(note, duration));
+        track.addEvent(midiChord(new chords.Chord(root, "m").chordNotes(), 2));
     }
 
     var write = new MidiWriter.Writer([track]);
