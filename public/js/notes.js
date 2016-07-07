@@ -8,22 +8,23 @@ exports.Pitch = function (note, octave) {
         return this.note + this.octave;
     };
 
-    this.addSemitones = function (semitoneNumber) {
-        var noteIndex = NOTES.indexOf(note);
+    this.transpose = function (semitoneNumber) {
+        var newPitch = module.exports.duplicatePitch(this);
+        var noteIndex = NOTES.indexOf(newPitch.note);
         var newIndex = noteIndex + semitoneNumber;
         if (newIndex >= NOTES.length) {
             newIndex -= NOTES.length;
-            this.octave++;
+            newPitch.octave++;
         }
         if (newIndex < 0) {
             newIndex += NOTES.length;
-            this.octave--;
+            newPitch.octave--;
         }
-        this.note = NOTES[newIndex];
-        return this;
+        newPitch.note = NOTES[newIndex];
+        return newPitch;
     }
 };
 
 exports.duplicatePitch = function(pitch){
-    return new this.Pitch(pitch.note, pitch.octave);
+    return new module.exports.Pitch(pitch.note, pitch.octave);
 };
