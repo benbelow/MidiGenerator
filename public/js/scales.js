@@ -57,6 +57,10 @@ exports.Scale = function(steps, root) {
         return [_this.leadingTone(),_this.supertonic().transpose(12),_this.subdominant().transpose(12)]
     };
 
+    this.chords = function(){
+        return [this.tonicChord(), this.supertonicChord(), this.mediantChord(), this.subdominantChord(), this.dominantChord(), this.submediantChord(), this.leadingToneChord()];
+    };
+
     this.getLength = function () {
         return this.scaleNotes.length;
     };
@@ -64,4 +68,8 @@ exports.Scale = function(steps, root) {
     this.getRandomNote = function () {
         return random.getRandomElementOfArray(this.scaleNotes);
     };
-}
+
+    this.getRandomChord = function() {
+        return random.getRandomElementOfArray(_this.chords());
+    }
+};

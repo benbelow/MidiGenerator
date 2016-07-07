@@ -36,26 +36,28 @@ function midiChord(notes, duration) {
 
 exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
+    var root = new notes.Pitch("G#", 3);
+    var scale = new scales.Scale(phrygianSteps, root);
+
+
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
-
-    var root = new notes.Pitch("C", 3);
-    var scale = new scales.Scale(ionianSteps, root);
-
-    for (var i = 0; i < scale.getLength(); i++) {
-        var note = scale.getRandomNote();
-        var duration = random.getRandomElementOfArray(DURATIONS);
-        // track.addEvent(midiNote(note, duration));
-        track.addEvent(midiChord(new scale.tonicChord(), 2));
-        track.addEvent(midiChord(new scale.supertonicChord(), 2));
-        track.addEvent(midiChord(new scale.mediantChord(), 2));
-        track.addEvent(midiChord(new scale.subdominantChord(), 2));
-        track.addEvent(midiChord(new scale.dominantChord(), 2));
-        track.addEvent(midiChord(new scale.submediantChord(), 2));
-        track.addEvent(midiChord(new scale.leadingToneChord(), 2));
-    }
+    // for (var i = 0; i < scale.getLength(); i++) {
+    //     var note = scale.getRandomNote();
+    //     var duration = random.getRandomElementOfArray(DURATIONS);
+    //     track.addEvent(midiNote(note, duration));
+    // }
+    track.addEvent(midiChord(new scale.tonicChord(), 2));
+    track.addEvent(midiChord(new scale.getRandomChord(), 2));
+    track.addEvent(midiChord(new scale.getRandomChord(), 2));
+    track.addEvent(midiChord(new scale.getRandomChord(), 2));
+    track.addEvent(midiChord(new scale.getRandomChord(), 2));
+    track.addEvent(midiChord(new scale.getRandomChord(), 2));
+    track.addEvent(midiChord(new scale.getRandomChord(), 2));
+    track.addEvent(midiChord(new scale.tonicChord(), 2));
 
     var write = new MidiWriter.Writer([track]);
-    var data = 'data:audio/midi;base64,' + write.base64()
+    var data = 'data:audio/midi;base64,' + write.base64();
     console.log(data);
     return data;
-};
+}
+
