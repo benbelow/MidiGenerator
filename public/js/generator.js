@@ -1,8 +1,8 @@
 var MidiWriter = require('midi-writer-js');
+var chords = require('./chords.js');
+var notes = require('./notes.js');
 
-var notes = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
-var octaves = ["1", "2", "3", "4", "5", "6"];
-var durations = ["1","2","d2","4","d4","8","8t","d8","16"];
+var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
 var ionianSteps = [2, 2, 1, 2, 2, 2, 1];
 var dorianSteps = [2, 1, 2, 2, 2, 1, 2];
 var phrygianSteps = [1, 2, 2, 2, 1, 2, 2];
@@ -11,63 +11,41 @@ var mixolydianSteps = [2, 2, 1, 2, 2, 1, 2];
 var aeolianSteps = [2, 1, 2, 2, 1, 2, 2];
 var locrianSteps = [1, 2, 2, 1, 2, 2, 2];
 
-function Pitch(note, octave) {
-    this.note = note;
-    this.octave = octave;
 
-    this.noteString = function () {
-        return this.note + this.octave;
-    };
-
-    this.addSemitones = function (semitoneNumber) {
-        var noteIndex = notes.indexOf(note);
-        var newIndex = noteIndex + semitoneNumber;
-        if (newIndex >= notes.length) {
-            newIndex -= notes.length;
-            this.octave++;
-        }
-        if (newIndex < 0) {
-            newIndex += notes.length;
-            this.octave--;
-        }
-        this.note = notes[newIndex];
-    }
-}
 
 function Scale(steps, root) {
     this.steps = steps;
     this.root = root;
-    this.notes;
-
-    this.getNotes = function () {
-        if (this.notes != null) {
-            return this.notes;
-        }
+    this.setUpNotes = function () {
         var scaleNotes = [this.root];
         for (var i = 0; i < this.steps.length; i++) {
             var lastNote = scaleNotes.slice(-1)[0];
-            var newNote = new Pitch(lastNote.note, lastNote.octave);
+            var newNote = new notes.Pitch(lastNote.note, lastNote.octave);
             newNote.addSemitones(this.steps[i]);
             scaleNotes.push(newNote);
         }
         return scaleNotes;
     };
+    this.notes = this.setUpNotes();
+
+    this.getLength = function () {
+        return this.notes.length;
+    };
 
     this.getRandomNote = function () {
-        return getRandomElementOfArray(this.getNotes());
-    }
-
+        return getRandomElementOfArray(this.notes);
+    };
 }
 
-function midiNote(note, duration){
+function midiNote(note, duration) {
     return new MidiWriter.NoteEvent({pitch: [note], duration: duration, sequential: true});
 }
 
-function midiPhrase(notes, duration){
+function midiPhrase(notes, duration) {
     return new MidiWriter.NoteEvent({pitch: notes, duration: duration, sequential: true});
 }
 
-function midiChord(notes, duration){
+function midiChord(notes, duration) {
     return new MidiWriter.NoteEvent({pitch: notes, duration: duration, sequential: false});
 }
 
@@ -75,13 +53,14 @@ exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
 
-    var root = new Pitch("C#", 4);
+    var root = new notes.Pitch("C#", 4);
     var scale = new Scale(dorianSteps, root);
 
-    for (var i = 0; i < scale.getNotes().length; i++) {
+    for (var i = 0; i < scale.getLength(); i++) {
         var note = scale.getRandomNote();
-        var duration = getRandomElementOfArray(durations);
+        var duration = getRandomElementOfArray(DURATIONS);
         track.addEvent(midiNote(note.noteString(), duration));
+        track.addEvent(midiChord(chords.chordNotes("C","Maj"), 4));
     }
 
     var write = new MidiWriter.Writer([track]);
@@ -94,6 +73,6 @@ function getRandomNumberInRange(min, max) {
     return Math.floor((Math.random() * max) + min);
 }
 
-function getRandomElementOfArray(array){
-    return array[getRandomNumberInRange(0,array.length)];
+function getRandomElementOfArray(array) {
+    return array[getRandomNumberInRange(0, array.length)];
 }
