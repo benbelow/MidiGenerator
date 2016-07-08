@@ -42,22 +42,16 @@ exports.generateMelody = function generateMelody() {
     var root = new notes.Pitch(random.getRandomElementOfArray(NOTES), 3);
     var scale = new scales.Scale(random.getRandomElementOfArray(modes), root);
 
+    var sequence = new chords.generateSequence(scale, 8);
+
+    for(var i=0; i<sequence.length;i++){
+        track.addEvent(midiChord(sequence[i].chordNotes(), "2"));
+    }
+
+    console.log(scale.scaleNotes().map(function(x){return x}));
+    console.log(sequence.map(function(x){return x.root.note}));
 
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
-
-    track.addEvent(midiChord(new scale.tonicChord(), 1));
-    playAPhrase(10);
-    track.addEvent(midiChord(new scale.getRandomChord(), 1));
-    playAPhrase(10);
-    track.addEvent(midiChord(new scale.getRandomChord(), 1));
-    playAPhrase(30);
-    track.addEvent(midiChord(new scale.getRandomChord(), 1));
-    track.addEvent(midiChord(new scale.getRandomChord(), 1));
-    track.addEvent(midiChord(new scale.getRandomChord(), 1));
-    track.addEvent(midiChord(new scale.getRandomChord(), 1));
-    playAPhrase(5);
-    track.addEvent(midiChord(new scale.dominantChord(), 1));
-    track.addEvent(midiChord(new scale.tonicChord(), 1));
 
     var write = new MidiWriter.Writer([track]);
     var data = 'data:audio/midi;base64,' + write.base64();
