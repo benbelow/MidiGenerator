@@ -4,6 +4,7 @@ var chords = require('./chords.js');
 var notes = require('./notes.js');
 var random = require('./random.js');
 
+var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
 var ionianSteps = [2, 2, 1, 2, 2, 2, 1];
 var dorianSteps = [2, 1, 2, 2, 2, 1, 2];
@@ -12,6 +13,8 @@ var lydianSteps = [2, 2, 2, 1, 2, 2, 1];
 var mixolydianSteps = [2, 2, 1, 2, 2, 1, 2];
 var aeolianSteps = [2, 1, 2, 2, 1, 2, 2];
 var locrianSteps = [1, 2, 2, 1, 2, 2, 2];
+var majorBluesSteps = [2,1,2,1,3,1,2]
+modes = [ionianSteps, dorianSteps, phrygianSteps, lydianSteps, mixolydianSteps, aeolianSteps, locrianSteps, majorBluesSteps];
 
 
 function midiNote(note, duration) {
@@ -36,28 +39,39 @@ function midiChord(notes, duration) {
 
 exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
-    var root = new notes.Pitch("G#", 3);
-    var scale = new scales.Scale(phrygianSteps, root);
+    var root = new notes.Pitch(random.getRandomElementOfArray(NOTES), 3);
+    var scale = new scales.Scale(random.getRandomElementOfArray(modes), root);
 
 
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
-    // for (var i = 0; i < scale.getLength(); i++) {
-    //     var note = scale.getRandomNote();
-    //     var duration = random.getRandomElementOfArray(DURATIONS);
-    //     track.addEvent(midiNote(note, duration));
-    // }
-    track.addEvent(midiChord(new scale.tonicChord(), 2));
-    track.addEvent(midiChord(new scale.getRandomChord(), 2));
-    track.addEvent(midiChord(new scale.getRandomChord(), 2));
-    track.addEvent(midiChord(new scale.getRandomChord(), 2));
-    track.addEvent(midiChord(new scale.getRandomChord(), 2));
-    track.addEvent(midiChord(new scale.getRandomChord(), 2));
-    track.addEvent(midiChord(new scale.getRandomChord(), 2));
-    track.addEvent(midiChord(new scale.tonicChord(), 2));
+
+    track.addEvent(midiChord(new scale.tonicChord(), 1));
+    playAPhrase(10);
+    track.addEvent(midiChord(new scale.getRandomChord(), 1));
+    playAPhrase(10);
+    track.addEvent(midiChord(new scale.getRandomChord(), 1));
+    playAPhrase(30);
+    track.addEvent(midiChord(new scale.getRandomChord(), 1));
+    track.addEvent(midiChord(new scale.getRandomChord(), 1));
+    track.addEvent(midiChord(new scale.getRandomChord(), 1));
+    track.addEvent(midiChord(new scale.getRandomChord(), 1));
+    playAPhrase(5);
+    track.addEvent(midiChord(new scale.dominantChord(), 1));
+    track.addEvent(midiChord(new scale.tonicChord(), 1));
 
     var write = new MidiWriter.Writer([track]);
     var data = 'data:audio/midi;base64,' + write.base64();
     console.log(data);
     return data;
-}
+
+    function playAPhrase(maxNumberOfNotes){
+        var numberOfNotes = random.getRandomNumberInRange(2,maxNumberOfNotes);
+        for (var i = 0; i < numberOfNotes; i++) {
+            var note = scale.getRandomNote();
+            var duration = random.getRandomElementOfArray(DURATIONS);
+            track.addEvent(midiNote(note, duration));
+        }
+    }
+
+};
 
