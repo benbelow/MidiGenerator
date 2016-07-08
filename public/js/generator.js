@@ -13,8 +13,9 @@ var lydianSteps = [2, 2, 2, 1, 2, 2, 1];
 var mixolydianSteps = [2, 2, 1, 2, 2, 1, 2];
 var aeolianSteps = [2, 1, 2, 2, 1, 2, 2];
 var locrianSteps = [1, 2, 2, 1, 2, 2, 2];
-var majorBluesSteps = [2,1,2,1,3,1,2]
-modes = [ionianSteps, dorianSteps, phrygianSteps, lydianSteps, mixolydianSteps, aeolianSteps, locrianSteps, majorBluesSteps];
+var majorBluesSteps = [2,1,2,1,3,1,2];
+modes = {"Ionian" : ionianSteps, "Dorian" : dorianSteps, "Phrygian" : phrygianSteps, "Lydian" : lydianSteps, "Mixolydian" : mixolydianSteps, "Aeolian" : aeolianSteps, "Locrian" : locrianSteps, "Major Blues" : majorBluesSteps
+};
 
 
 function midiNote(note, duration) {
@@ -40,22 +41,24 @@ function midiChord(notes, duration) {
 exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
     var root = new notes.Pitch(random.getRandomElementOfArray(NOTES), 3);
-    var scale = new scales.Scale(random.getRandomElementOfArray(modes), root);
+    var mode = random.getRandomElementOfArray(Object.keys(modes).map(function(x){return modes[x]}));
+    var scale = new scales.Scale(mode, root);
 
     var sequence = new chords.generateSequence(scale, 8);
 
     for(var i=0; i<sequence.length;i++){
         track.addEvent(midiChord(sequence[i].chordNotes(), "2"));
+        if(random.check(50)){
+            playAPhrase(5);
+        }
     }
 
-    console.log(scale.scaleNotes().map(function(x){return x}));
-    console.log(sequence.map(function(x){return x.root.note}));
+    console.log(root.note + " " + Object.keys(modes).filter(function(x){return modes[x] == mode}));
 
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
 
     var write = new MidiWriter.Writer([track]);
     var data = 'data:audio/midi;base64,' + write.base64();
-    console.log(data);
     return data;
 
     function playAPhrase(maxNumberOfNotes){
