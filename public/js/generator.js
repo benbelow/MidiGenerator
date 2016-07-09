@@ -39,6 +39,13 @@ function midiChord(notes, duration) {
     });
 }
 
+// This requires manual editing of the midi-writer-js library until PR is merged
+function midiRest(duration){
+    return new MidiWriter.NoteEvent({
+        pitch: ["C1"], duration: "0", wait: duration, sequential: false
+    });
+}
+
 exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
     track.setTempo(120);
@@ -52,7 +59,7 @@ exports.generateMelody = function generateMelody() {
     for(var i=0; i<sequence.length;i++){
         track.addEvent(midiChord(sequence[i].chordNotes(), "4"));
         if(random.check(100)){
-            playABar();
+            playBeats(3);
         }
     }
 
@@ -76,18 +83,23 @@ exports.generateMelody = function generateMelody() {
     }
 
     function playABar(){
-        var barLength = 48;
+        playBeats(4);
+    }
+
+    function playBeats(numberOfBeats){
+        var numberOfTwelfthBeats = numberOfBeats * 12;
         var allowedValues = Object.keys(durationsInFortyEighths);
         var durations = [];
         var sumOfDurations = 0;
-        while (sumOfDurations < barLength){
-            if(barLength - sumOfDurations == 5 || barLength - sumOfDurations < 3){
-                playABar();
+        while (sumOfDurations < numberOfTwelfthBeats){
+            if(numberOfTwelfthBeats - sumOfDurations == 5 || numberOfTwelfthBeats - sumOfDurations < 3){
+                //Gone wrong, start again. There's probably a better algorithm than this, but hey it's really late, ok.
+                playBeats(numberOfBeats);
                 return;
             }
             var durationToAdd = random.getRandomElementOfArray(allowedValues);
             var durationToAddInFortyEighths = durationsInFortyEighths[durationToAdd];
-            while(barLength - sumOfDurations < durationToAddInFortyEighths){
+            while(numberOfTwelfthBeats - sumOfDurations < durationToAddInFortyEighths){
                 durationToAdd = random.getRandomElementOfArray(allowedValues);
                 durationToAddInFortyEighths = durationsInFortyEighths[durationToAdd];
 
@@ -95,9 +107,14 @@ exports.generateMelody = function generateMelody() {
             durations.push(durationToAdd);
             sumOfDurations += durationToAddInFortyEighths;
         }
+
         for(var i=0;i<durations.length;i++){
             var pitch = scale.getRandomNote();
-            track.addEvent(midiNote(pitch, durations[i]));
+            if(random.check(12)){
+                track.addEvent(midiRest(durations[i]));
+            } else{
+                track.addEvent(midiNote(pitch, durations[i]));
+            }
         }
     }
 
