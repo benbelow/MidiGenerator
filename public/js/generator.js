@@ -3,10 +3,12 @@ var MidiWriter = require('midi-writer-js');
 var chords = require('./chords.js');
 var notes = require('./notes.js');
 var random = require('./random.js');
+var helpers = require('./helpers.js');
 
 var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
-var durationsInFortyEighths = {"1" : 48, "2" : 24, "d2" : 36, "4" : 12, "d4" : 18, "8" : 6, "8t" : 4, "d8" : 9, "16" : 3};
+var durationsInTwelfthBeats = {"1": 48, "2": 24, "d2": 36, "4": 12, "d4": 18, "8": 6, "8t": 4, "d8": 9, "16": 3};
+var weightedDurations = {"1": 5, "2": 10, "d2": 6, "4": 20, "d4": 6, "8": 8, "8t": 9, "d8": 2, "16": 10};
 var ionianSteps = [2, 2, 1, 2, 2, 2, 1];
 var dorianSteps = [2, 1, 2, 2, 2, 1, 2];
 var phrygianSteps = [1, 2, 2, 2, 1, 2, 2];
@@ -14,8 +16,14 @@ var lydianSteps = [2, 2, 2, 1, 2, 2, 1];
 var mixolydianSteps = [2, 2, 1, 2, 2, 1, 2];
 var aeolianSteps = [2, 1, 2, 2, 1, 2, 2];
 var locrianSteps = [1, 2, 2, 1, 2, 2, 2];
-var majorBluesSteps = [2,1,2,1,3,1,2];
-modes = {"Ionian" : ionianSteps, "Dorian" : dorianSteps, "Phrygian" : phrygianSteps, "Lydian" : lydianSteps, "Mixolydian" : mixolydianSteps, "Aeolian" : aeolianSteps, "Locrian" : locrianSteps, "Major Blues" : majorBluesSteps
+modes = {
+    "Ionian": ionianSteps,
+    "Dorian": dorianSteps,
+    "Phrygian": phrygianSteps,
+    "Lydian": lydianSteps,
+    "Mixolydian": mixolydianSteps,
+    "Aeolian": aeolianSteps,
+    "Locrian": locrianSteps
 };
 
 
@@ -40,7 +48,7 @@ function midiChord(notes, duration) {
 }
 
 // This requires manual editing of the midi-writer-js library until PR is merged
-function midiRest(duration){
+function midiRest(duration) {
     return new MidiWriter.NoteEvent({
         pitch: ["C1"], duration: "0", wait: duration, sequential: false
     });
@@ -51,72 +59,145 @@ exports.generateMelody = function generateMelody() {
     track.setTempo(120);
 
     var root = new notes.Pitch(random.getRandomElementOfArray(NOTES), 3);
-    var mode = random.getRandomElementOfArray(Object.keys(modes).map(function(x){return modes[x]}));
+    var mode = random.getRandomElementOfArray(Object.keys(modes).map(function (x) {
+        return modes[x]
+    }));
     var scale = new scales.Scale(mode, root);
 
-    var sequence = new chords.generateSequence(scale, 8);
+    var sequence = new chords.generateSequence(scale, 2);
+    var chorusSequence = new chords.generateSequence(scale, 4);
 
-    for(var i=0; i<sequence.length;i++){
-        track.addEvent(midiChord(sequence[i].chordNotes(), "4"));
-        if(random.check(100)){
-            playBeats(3);
-        }
-    }
+    var verse = generateSection(4,sequence);
+    var chorus = generateSection(2,chorusSequence);
+    playSection(verse);
+    playSection(verse);
+    playSection(chorus);
+    playSection(verse);
+
 
     track.addEvent(midiChord(scale.tonicChord().chordNotes(), "1"));
 
-    console.log(root.note + " " + Object.keys(modes).filter(function(x){return modes[x] == mode}));
+    console.log(root.note + " " + Object.keys(modes).filter(function (x) {
+            return modes[x] == mode
+        }));
 
     track.addEvent(new MidiWriter.ProgramChangeEvent({instrument: 1}));
 
     var write = new MidiWriter.Writer([track]);
-    var data = 'data:audio/midi;base64,' + write.base64();
-    return data;
+    return 'data:audio/midi;base64,' + write.base64();
 
-    function playAPhrase(maxNumberOfNotes){
-        var numberOfNotes = random.getRandomNumberInRange(2,maxNumberOfNotes);
-        for (var i = 0; i < numberOfNotes; i++) {
-            var note = scale.getRandomNote();
-            var duration = random.getRandomElementOfArray(DURATIONS);
-            track.addEvent(midiNote(note, duration));
-        }
-    }
-
-    function playABar(){
-        playBeats(4);
-    }
-
-    function playBeats(numberOfBeats){
+    function generatePhraseDurations(numberOfBeats) {
         var numberOfTwelfthBeats = numberOfBeats * 12;
-        var allowedValues = Object.keys(durationsInFortyEighths);
         var durations = [];
         var sumOfDurations = 0;
-        while (sumOfDurations < numberOfTwelfthBeats){
-            if(numberOfTwelfthBeats - sumOfDurations == 5 || numberOfTwelfthBeats - sumOfDurations < 3){
+        while (sumOfDurations < numberOfTwelfthBeats) {
+            if (numberOfTwelfthBeats - sumOfDurations == 5 || numberOfTwelfthBeats - sumOfDurations < 3) {
                 //Gone wrong, start again. There's probably a better algorithm than this, but hey it's really late, ok.
-                playBeats(numberOfBeats);
-                return;
-            }
-            var durationToAdd = random.getRandomElementOfArray(allowedValues);
-            var durationToAddInFortyEighths = durationsInFortyEighths[durationToAdd];
-            while(numberOfTwelfthBeats - sumOfDurations < durationToAddInFortyEighths){
-                durationToAdd = random.getRandomElementOfArray(allowedValues);
-                durationToAddInFortyEighths = durationsInFortyEighths[durationToAdd];
+                return generatePhraseDurations(numberOfBeats);
 
+            }
+            var durationToAdd = getRandomWeightedDuration();
+            var durationToAddInFortyEighths = durationsInTwelfthBeats[durationToAdd];
+            while (numberOfTwelfthBeats - sumOfDurations < durationToAddInFortyEighths) {
+                durationToAdd = getRandomWeightedDuration();
+                durationToAddInFortyEighths = durationsInTwelfthBeats[durationToAdd];
+            }
+            if (durationToAdd == "8t" && durationToAddInFortyEighths - (durationToAddInFortyEighths*3) >= 0) {
+                durations.push(durationToAdd);
+                durations.push(durationToAdd);
+                sumOfDurations += durationToAddInFortyEighths;
+                sumOfDurations += durationToAddInFortyEighths;
             }
             durations.push(durationToAdd);
             sumOfDurations += durationToAddInFortyEighths;
         }
+        return durations;
+    }
 
-        for(var i=0;i<durations.length;i++){
-            var pitch = scale.getRandomNote();
-            if(random.check(12)){
-                track.addEvent(midiRest(durations[i]));
-            } else{
-                track.addEvent(midiNote(pitch, durations[i]));
+    function generatePitchesForPhraseDurations(durations, chord) {
+        var pitches = [];
+        for (var i = 0; i < durations.length; i++) {
+            var pitch;
+            if (i == 0) {
+                pitch = chord.root;
+            } else {
+                pitch = random.getRandomElementOfArray(scale.scalePitches);
+                // while (!pitch.isHigherThan(pitches[i - 1]) && pitch != helpers.lastItemInList(scale.scalePitches)) {
+                //     pitch = random.getRandomElementOfArray(scale.scalePitches);
+                // }
+            }
+            pitches.push(pitch);
+        }
+        return pitches;
+    }
+
+    function generatePhrase(numberOfBeats, chord){
+        var durations = generatePhraseDurations(numberOfBeats);
+        var pitches = generatePitchesForPhraseDurations(durations, chord);
+        return {durations : durations, pitches : pitches, chord : chord};
+    }
+
+    function generateSection(beatsPerPhrase, sequence){
+        var phrases = [];
+        for (var i=0;i<sequence.length;i++){
+            phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
+        }
+        return phrases;
+    }
+
+    function playSection(section){
+        for(var i=0;i<section.length;i++){
+            playPhrase(section[i]);
+        }
+    }
+
+    function playPhrase(phrase){
+        for (var i = 0; i < phrase.durations.length; i++) {
+            if(i==0){
+                track.addEvent(midiChord(phrase.chord.chordNotes(), phrase.durations[i]));
+            } else {
+                track.addEvent(midiNote(phrase.pitches[i], phrase.durations[i]));
             }
         }
     }
+
+    function playBeatsWeighted(numberOfBeats, chord){
+        var phrase = generatePhrase(numberOfBeats, chord);
+        for (var i = 0; i < phrase.durations.length; i++) {
+            if(i==0){
+                track.addEvent(midiChord(chord.chordNotes(), phrase.durations[i]));
+                continue;
+            }
+            if (random.check(12)) {
+                track.addEvent(midiRest(phrase.durations[i]));
+            } else {
+                track.addEvent(midiNote(phrase.pitches[i], phrase.durations[i]));
+            }
+        }
+    }
+
+    function sumOfDurationWeights() {
+        var weightedDurationValues = Object.keys(weightedDurations);
+        var totalWeight = 0;
+        for(var i in weightedDurationValues){
+            totalWeight += weightedDurations[weightedDurationValues[i]];
+        }
+        return totalWeight;
+    }
+
+    function getRandomWeightedDuration(){
+        var weightedDurationValues = Object.keys(weightedDurations);
+        var sumOfWeights = sumOfDurationWeights();
+        var randomWeight = random.getRandomNumberInRange(0,sumOfWeights);
+        var currentTotal = 0;
+        for(var i=0; i<weightedDurationValues.length; i++){
+            currentTotal += weightedDurations[weightedDurationValues[i]];
+            if(randomWeight <= currentTotal){
+                return weightedDurationValues[i];
+            }
+        }
+    }
+
 
 };
 

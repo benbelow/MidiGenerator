@@ -8,6 +8,16 @@ exports.Pitch = function (note, octave) {
         return this.note + this.octave;
     };
 
+    this.isHigherThan = function (pitch) {
+        if (this.octave > pitch.octave) {
+            return true;
+        } else if (this.octave == pitch.octave) {
+            return NOTES.indexOf(this.note) > NOTES.indexOf(pitch.note);
+        } else {
+            return false;
+        }
+    };
+
     this.transpose = function (semitoneNumber) {
         var newPitch = module.exports.duplicatePitch(this);
         var noteIndex = NOTES.indexOf(newPitch.note);
@@ -25,6 +35,6 @@ exports.Pitch = function (note, octave) {
     }
 };
 
-exports.duplicatePitch = function(pitch){
+exports.duplicatePitch = function (pitch) {
     return new module.exports.Pitch(pitch.note, pitch.octave);
 };
