@@ -19,6 +19,12 @@ exports.Pitch = function (note, octave) {
     };
 
     this.transpose = function (semitoneNumber) {
+        if(semitoneNumber > 12){
+            return this.transpose(12).transpose(semitoneNumber - 12);
+        }
+        if(semitoneNumber < -12){
+            return this.transpose(-12).transpose(semitoneNumber + 12);
+        }
         var newPitch = module.exports.duplicatePitch(this);
         var noteIndex = NOTES.indexOf(newPitch.note);
         var newIndex = noteIndex + semitoneNumber;
