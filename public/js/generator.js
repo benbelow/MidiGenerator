@@ -149,32 +149,59 @@ exports.generateMelody = function generateMelody() {
     }
 
     function variationOfPhrase(phrase) {
-        var newDurations = phrase.durations;
-        var newPitches = phrase.pitches;
-        if (random.check(0)) {
-            newDurations = generatePhraseDurations(phrase.numberOfBeats);
-            if (newDurations.length > phrase.pitches.length) {
-                newPitches = newPitches.concat(generatePitchesForPhraseDurations(newDurations.slice(0, phrase.pitches.length - newDurations.length), phrase.chord));
-            } else {
-                newPitches = newPitches.slice(0, newDurations.length);
-            }
+        var newPhrase;
+        if (random.check(20)) {
+            newPhrase = varyPhraseDurations(phrase);
         } else {
-            var numberOfPitchesToChange = random.getRandomNumberInRange(1, newPitches.length);
-            var changedIndexes = [];
-            for (var i = 0; i < numberOfPitchesToChange; i++) {
-                var indexToChange;
-                do {
-                    indexToChange = random.getRandomNumberInRange(0, newPitches.length - 1);
-                } while (changedIndexes.indexOf(indexToChange) != -1)
-                newPitches[indexToChange] = scale.getPitchAtInterval(newPitches[indexToChange], random.getRandomNumberInRange(-2,2));
-                changedIndexes.push(indexToChange);
-            }
-            newPitches = generatePitchesForPhraseDurations(newDurations, phrase.chord);
+            newPhrase = varyPhrasePitches(phrase);
+        }
+        if (random.check(50)) {
+            newPhrase = varyPhraseChord(newPhrase);
+        }
+        return newPhrase;
+    }
+
+    function varyPhraseDurations(phrase){
+        var newDurations = generatePhraseDurations(phrase.numberOfBeats);
+        var newPitches = phrase.pitches.slice();
+        if (newDurations.length > phrase.pitches.length) {
+            newPitches = newPitches.concat(generatePitchesForPhraseDurations(newDurations.slice(0, phrase.pitches.length - newDurations.length), phrase.chord));
+        } else {
+            newPitches = newPitches.slice(0, newDurations.length);
         }
         return {
             durations: newDurations,
             pitches: newPitches,
             chord: phrase.chord,
+            numberOfBeats: phrase.numberOfBeats
+        };
+    }
+
+    function varyPhrasePitches(phrase){
+        var newPitches = phrase.pitches.slice();
+        var numberOfPitchesToChange = random.getRandomNumberInRange(1, newPitches.length);
+        var changedIndexes = [];
+        for (var i = 0; i < numberOfPitchesToChange; i++) {
+            var indexToChange;
+            do {
+                indexToChange = random.getRandomNumberInRange(0, newPitches.length - 1);
+            } while (changedIndexes.indexOf(indexToChange) != -1);
+            newPitches[indexToChange] = scale.getPitchAtInterval(newPitches[indexToChange], random.getRandomNumberInRange(-2, 2));
+            changedIndexes.push(indexToChange);
+        }
+        return {
+            durations: phrase.durations,
+            pitches: newPitches,
+            chord: phrase.chord,
+            numberOfBeats: phrase.numberOfBeats
+        };
+    }
+
+    function varyPhraseChord(phrase){
+        return {
+            durations: phrase.durations,
+            pitches: phrase.pitches,
+            chord: scale.getRandomChord(),
             numberOfBeats: phrase.numberOfBeats
         };
     }
