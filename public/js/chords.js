@@ -34,7 +34,7 @@ exports.fromName = function (root, chordType) {
 exports.generateSequence = function(scale, length){
     var chords = [scale.tonicChord()];
     for(var i=0; i<length-1; i++){
-        lastChord = helpers.lastItemInList(chords);
+        var lastChord = helpers.lastItemInList(chords);
         var allowedChords = [];
         switch(lastChord.root.note){
             case scale.tonicChord().root.note:

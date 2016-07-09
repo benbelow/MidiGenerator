@@ -145,13 +145,48 @@ exports.generateMelody = function generateMelody() {
     function generatePhrase(numberOfBeats, chord) {
         var durations = generatePhraseDurations(numberOfBeats);
         var pitches = generatePitchesForPhraseDurations(durations, chord);
-        return {durations: durations, pitches: pitches, chord: chord};
+        return {durations: durations, pitches: pitches, chord: chord, numberOfBeats: numberOfBeats};
+    }
+
+    function variationOfPhrase(phrase) {
+        var newDurations = phrase.durations;
+        var newPitches = phrase.pitches;
+        if (random.check(0)) {
+            newDurations = generatePhraseDurations(phrase.numberOfBeats);
+            if (newDurations.length > phrase.pitches.length) {
+                newPitches = newPitches.concat(generatePitchesForPhraseDurations(newDurations.slice(0, phrase.pitches.length - newDurations.length), phrase.chord));
+            } else {
+                newPitches = newPitches.slice(0, newDurations.length);
+            }
+        } else {
+            var numberOfPitchesToChange = random.getRandomNumberInRange(1, newPitches.length);
+            var changedIndexes = [];
+            for (var i = 0; i < numberOfPitchesToChange; i++) {
+                var indexToChange;
+                do {
+                    indexToChange = random.getRandomNumberInRange(0, newPitches.length - 1);
+                } while (changedIndexes.indexOf(indexToChange) != -1)
+                newPitches[indexToChange] = scale.getPitchAtInterval(newPitches[indexToChange], random.getRandomNumberInRange(-2,2));
+                changedIndexes.push(indexToChange);
+            }
+            newPitches = generatePitchesForPhraseDurations(newDurations, phrase.chord);
+        }
+        return {
+            durations: newDurations,
+            pitches: newPitches,
+            chord: phrase.chord,
+            numberOfBeats: phrase.numberOfBeats
+        };
     }
 
     function generateSection(beatsPerPhrase, sequence) {
         var phrases = [];
         for (var i = 0; i < sequence.length; i++) {
-            phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
+            if (i == 1 && random.check(100)) {
+                phrases.push(variationOfPhrase(phrases[0]));
+            } else {
+                phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
+            }
         }
         return phrases;
     }
