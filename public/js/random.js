@@ -8,5 +8,5 @@ exports.getRandomElementOfArray = function (array) {
 };
 
 exports.check = function(percentage){
-    return this.getRandomNumberInRange(0,100) > percentage;
+    return this.getRandomNumberInRange(0,100) <= percentage;
 };
