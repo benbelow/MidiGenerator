@@ -96,7 +96,7 @@ exports.Scale = function (steps, root) {
         })
     };
 
-    this.getRandomNote = function () {
+    this.getRandomPitch = function () {
         return random.getRandomElementOfArray(this.scalePitches);
     };
 
@@ -132,5 +132,21 @@ exports.Scale = function (steps, root) {
         }
         newPitch.note = this.scaleNotes()[newIndex];
         return newPitch;
+    };
+
+    this.getInterval = function (pitch1, pitch2) {
+        var pitch1Index = this.scaleNotes().indexOf(pitch1.note);
+        var pitch2Index = this.scaleNotes().indexOf(pitch2.note);
+        if (pitch1Index == -1 || pitch2Index == -1) {
+            throw("Asked for interval from note not in scale.");
+        }
+        var pitchDifference = pitch1Index - pitch2Index;
+        var absolutePitchInterval = pitch1.interval(pitch2);
+
+        if(Math.abs(absolutePitchInterval) > 12 ){
+            throw("!");
+        }
+
+        return pitchDifference;
     }
 };

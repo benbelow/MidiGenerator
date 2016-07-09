@@ -11,13 +11,11 @@ exports.Pitch = function (note, octave) {
     };
 
     this.isHigherThan = function (pitch) {
-        if (this.octave > pitch.octave) {
-            return true;
-        } else if (this.octave == pitch.octave) {
-            return NOTES.indexOf(this.note) > NOTES.indexOf(pitch.note);
-        } else {
-            return false;
-        }
+        return this.interval(pitch) > 1;
+    };
+
+    this.isLowerThan = function (pitch) {
+        return this.interval(pitch) < 1;
     };
 
     this.transpose = function (semitoneNumber) {
@@ -40,6 +38,15 @@ exports.Pitch = function (note, octave) {
         }
         newPitch.note = NOTES[newIndex];
         return newPitch;
+    };
+
+    this.interval = function(pitch){
+        var noteIndex= NOTES.indexOf(this.note);
+        var pitchNoteIndex = NOTES.indexOf(pitch.note);
+        var pitchDifference = noteIndex - pitchNoteIndex;
+        var octaveDifference = this.octave - pitch.octave;
+
+        return pitchDifference + (octaveDifference * NOTES.length);
     }
 };
 
