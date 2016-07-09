@@ -1,5 +1,7 @@
 var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 
+exports.NOTES = NOTES;
+
 exports.Pitch = function (note, octave) {
     this.note = note;
     this.octave = octave;

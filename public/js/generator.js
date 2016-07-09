@@ -8,14 +8,14 @@ var helpers = require('./helpers.js');
 var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
 var durationsInTwelfthBeats = {"1": 48, "2": 24, "d2": 36, "4": 12, "d4": 18, "8": 6, "8t": 4, "d8": 9, "16": 3};
-var weightedDurations = {"1": 5, "2": 10, "d2": 6, "4": 20, "d4": 6, "8": 8, "8t": 9, "d8": 2, "16": 10};
-var ionianSteps = [2, 2, 1, 2, 2, 2, 1];
-var dorianSteps = [2, 1, 2, 2, 2, 1, 2];
-var phrygianSteps = [1, 2, 2, 2, 1, 2, 2];
-var lydianSteps = [2, 2, 2, 1, 2, 2, 1];
-var mixolydianSteps = [2, 2, 1, 2, 2, 1, 2];
-var aeolianSteps = [2, 1, 2, 2, 1, 2, 2];
-var locrianSteps = [1, 2, 2, 1, 2, 2, 2];
+var weightedDurations = {"1": 5, "2": 10, "d2": 6, "4": 20, "d4": 6, "8": 8, "8t": 9, "d8": 2, "16": 15000};
+var ionianSteps = [2, 2, 1, 2, 2, 2];
+var dorianSteps = [2, 1, 2, 2, 2, 1];
+var phrygianSteps = [1, 2, 2, 2, 1, 2];
+var lydianSteps = [2, 2, 2, 1, 2, 2];
+var mixolydianSteps = [2, 2, 1, 2, 2, 1];
+var aeolianSteps = [2, 1, 2, 2, 1, 2];
+var locrianSteps = [1, 2, 2, 1, 2, 2];
 modes = {
     "Ionian": ionianSteps,
     "Dorian": dorianSteps,
@@ -67,7 +67,7 @@ exports.generateMelody = function generateMelody() {
     var sequence = new chords.generateSequence(scale, 2);
     var chorusSequence = new chords.generateSequence(scale, 4);
 
-    var verse = generateSection(4,sequence);
+    var verse = generateSection(20,sequence);
     var chorus = generateSection(2,chorusSequence);
     playSection(verse);
     playSection(verse);
@@ -121,10 +121,7 @@ exports.generateMelody = function generateMelody() {
             if (i == 0) {
                 pitch = chord.root;
             } else {
-                pitch = random.getRandomElementOfArray(scale.scalePitches);
-                // while (!pitch.isHigherThan(pitches[i - 1]) && pitch != helpers.lastItemInList(scale.scalePitches)) {
-                //     pitch = random.getRandomElementOfArray(scale.scalePitches);
-                // }
+                pitch = scale.getPitchAtInterval(helpers.lastItemInList(pitches), 2)
             }
             pitches.push(pitch);
         }
@@ -155,21 +152,6 @@ exports.generateMelody = function generateMelody() {
         for (var i = 0; i < phrase.durations.length; i++) {
             if(i==0){
                 track.addEvent(midiChord(phrase.chord.chordNotes(), phrase.durations[i]));
-            } else {
-                track.addEvent(midiNote(phrase.pitches[i], phrase.durations[i]));
-            }
-        }
-    }
-
-    function playBeatsWeighted(numberOfBeats, chord){
-        var phrase = generatePhrase(numberOfBeats, chord);
-        for (var i = 0; i < phrase.durations.length; i++) {
-            if(i==0){
-                track.addEvent(midiChord(chord.chordNotes(), phrase.durations[i]));
-                continue;
-            }
-            if (random.check(12)) {
-                track.addEvent(midiRest(phrase.durations[i]));
             } else {
                 track.addEvent(midiNote(phrase.pitches[i], phrase.durations[i]));
             }
