@@ -105,12 +105,12 @@ exports.Scale = function (steps, root) {
     };
 
     // ToDo: this is almost the same algorithm as note.transpose. Commonise?
-    this.getPitchAtInterval = function (pitch, interval) {
+    this.scaleTranspose = function (pitch, interval) {
         if (interval > 12) {
-            return this.getPitchAtInterval(pitch, 12).getPitchAtInterval(pitch, interval - 12);
+            return this.scaleTranspose(pitch, 12).scaleTranspose(pitch, interval - 12);
         }
         if (interval < -12) {
-            return this.getPitchAtInterval(pitch, -12).getPitchAtInterval(pitch, interval + 12);
+            return this.scaleTranspose(pitch, -12).scaleTranspose(pitch, interval + 12);
         }
         var scaleIndex = this.scaleNotes().indexOf(pitch.note);
         if (scaleIndex == -1) {
@@ -134,19 +134,32 @@ exports.Scale = function (steps, root) {
         return newPitch;
     };
 
-    this.getInterval = function (pitch1, pitch2) {
+    this.getScaleInterval = function (pitch1, pitch2) {
         var pitch1Index = this.scaleNotes().indexOf(pitch1.note);
         var pitch2Index = this.scaleNotes().indexOf(pitch2.note);
         if (pitch1Index == -1 || pitch2Index == -1) {
             throw("Asked for interval from note not in scale.");
         }
-        var pitchDifference = pitch1Index - pitch2Index;
+        var pitchDifference = pitch2Index - pitch1Index;
         var absolutePitchInterval = pitch1.interval(pitch2);
 
-        if(Math.abs(absolutePitchInterval) > 12 ){
+        if (Math.abs(absolutePitchInterval) > 12) {
             throw("!");
+        } else if (helpers.sign(absolutePitchInterval) != helpers.sign(pitchDifference)){
+            pitchDifference = (this.scalePitches.length - Math.abs(pitchDifference)) * helpers.sign(absolutePitchInterval);
         }
 
         return pitchDifference;
-    }
+    };
+
+    this.scaleIntervals = function (pitches) {
+        var intervals = [];
+        if (pitches.length <= 1) {
+            return intervals;
+        }
+        for (var i = 0; i < pitches.length - 1; i++) {
+            intervals.push(this.getScaleInterval(pitches[i], pitches[i + 1]));
+        }
+        return intervals;
+    };
 };

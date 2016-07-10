@@ -19,10 +19,10 @@ exports.Pitch = function (note, octave) {
     };
 
     this.transpose = function (semitoneNumber) {
-        if(semitoneNumber > 12){
+        if (semitoneNumber > 12) {
             return this.transpose(12).transpose(semitoneNumber - 12);
         }
-        if(semitoneNumber < -12){
+        if (semitoneNumber < -12) {
             return this.transpose(-12).transpose(semitoneNumber + 12);
         }
         var newPitch = module.exports.duplicatePitch(this);
@@ -40,11 +40,11 @@ exports.Pitch = function (note, octave) {
         return newPitch;
     };
 
-    this.interval = function(pitch){
-        var noteIndex= NOTES.indexOf(this.note);
+    this.interval = function (pitch) {
+        var noteIndex = NOTES.indexOf(this.note);
         var pitchNoteIndex = NOTES.indexOf(pitch.note);
-        var pitchDifference = noteIndex - pitchNoteIndex;
-        var octaveDifference = this.octave - pitch.octave;
+        var pitchDifference = pitchNoteIndex - noteIndex;
+        var octaveDifference = pitch.octave - this.octave;
 
         return pitchDifference + (octaveDifference * NOTES.length);
     }
@@ -52,4 +52,15 @@ exports.Pitch = function (note, octave) {
 
 exports.duplicatePitch = function (pitch) {
     return new module.exports.Pitch(pitch.note, pitch.octave);
+};
+
+exports.intervals = function (pitches) {
+    var intervals = [];
+    if (pitches.length <= 1) {
+        return intervals;
+    }
+    for (var i = 0; i < intervals.length - 1; i++) {
+        intervals.push(intervals[i].interval(intervals[i + 1]))
+    }
+    return intervals;
 };
