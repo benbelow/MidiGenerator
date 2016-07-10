@@ -8,6 +8,9 @@ exports.getRandomNumberInRange = function (min, max) {
 };
 
 exports.getRandomElementOfArray = function (array) {
+    if(array.length <= 0){
+        throw("Cannot get element of empty array");
+    }
     return array[this.getRandomNumberInRange(0, array.length - 1)];
 };
 

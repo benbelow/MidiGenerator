@@ -8,7 +8,7 @@ var helpers = require('./helpers.js');
 var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
 var durationsInTwelfthBeats = {"1": 48, "2": 24, "d2": 36, "4": 12, "d4": 18, "8": 6, "8t": 4, "d8": 9, "16": 3};
-var weightedDurations = {"1": 5, "2": 10, "d2": 6, "4": 20, "d4": 6, "8": 8, "8t": 9, "d8": 2, "16": 15};
+var weightedDurations = {"1": 5, "2": 12, "d2": 6, "4": 22, "d4": 6, "8": 8, "8t": 9, "d8": 2, "16": 10};
 var ionianSteps = [2, 2, 1, 2, 2, 2];
 var dorianSteps = [2, 1, 2, 2, 2, 1];
 var phrygianSteps = [1, 2, 2, 2, 1, 2];
@@ -64,15 +64,16 @@ exports.generateMelody = function generateMelody() {
     }));
     var scale = new scales.Scale(mode, root);
 
-    var sequence = new chords.generateSequence(scale, 2);
+    var sequence = new chords.generateSequence(scale, 4);
+    var sequence2 = new chords.generateSequence(scale, 4);
     var chorusSequence = new chords.generateSequence(scale, 4);
 
-    var verse = generateSection(4, sequence);
     var chorus = generateSection(2, chorusSequence);
-    playSection(verse);
-    playSection(verse);
+    playSection(generateSection(4, sequence));
     playSection(chorus);
-    playSection(verse);
+    playSection(generateSection(4, sequence2));
+    playSection(chorus);
+    playSection(generateSection(4, sequence));
 
 
     track.addEvent(midiChord(scale.tonicChord().chordNotes(), "1"));
@@ -127,9 +128,9 @@ exports.generateMelody = function generateMelody() {
                     pitch = scale.getPitchAtInterval(helpers.lastItemInList(pitches), random.getRandomNumberInRange(1, 3));
                 } else if (-2 < lastInterval && lastInterval < 0 && random.check(50)) {
                     pitch = scale.getPitchAtInterval(helpers.lastItemInList(pitches), -random.getRandomNumberInRange(1, 3));
-                } else if (lastInterval > 3) {
+                } else if (lastInterval > 3 && random.check(60)) {
                     pitch = scale.getPitchAtInterval(helpers.lastItemInList(pitches), random.getRandomNumberInRange(1, 3));
-                } else if (lastInterval < -3) {
+                } else if (lastInterval < -3 && random.check(60)) {
                     pitch = scale.getPitchAtInterval(helpers.lastItemInList(pitches), -random.getRandomNumberInRange(1, 3));
                 }
             }
@@ -161,11 +162,11 @@ exports.generateMelody = function generateMelody() {
         return newPhrase;
     }
 
-    function varyPhraseDurations(phrase){
+    function varyPhraseDurations(phrase) {
         var newDurations = generatePhraseDurations(phrase.numberOfBeats);
         var newPitches = phrase.pitches.slice();
         if (newDurations.length > phrase.pitches.length) {
-            newPitches = newPitches.concat(generatePitchesForPhraseDurations(newDurations.slice(0, phrase.pitches.length - newDurations.length), phrase.chord));
+            newPitches = newPitches.concat(generatePitchesForPhraseDurations(newDurations.slice(0, newDurations.length - phrase.pitches.length), phrase.chord));
         } else {
             newPitches = newPitches.slice(0, newDurations.length);
         }
@@ -177,7 +178,7 @@ exports.generateMelody = function generateMelody() {
         };
     }
 
-    function varyPhrasePitches(phrase){
+    function varyPhrasePitches(phrase) {
         var newPitches = phrase.pitches.slice();
         var numberOfPitchesToChange = random.getRandomNumberInRange(1, newPitches.length);
         var changedIndexes = [];
@@ -197,7 +198,7 @@ exports.generateMelody = function generateMelody() {
         };
     }
 
-    function varyPhraseChord(phrase){
+    function varyPhraseChord(phrase) {
         return {
             durations: phrase.durations,
             pitches: phrase.pitches,
@@ -209,8 +210,10 @@ exports.generateMelody = function generateMelody() {
     function generateSection(beatsPerPhrase, sequence) {
         var phrases = [];
         for (var i = 0; i < sequence.length; i++) {
-            if (i == 1 && random.check(100)) {
+            if (i == 1 && random.check(75)) {
                 phrases.push(variationOfPhrase(phrases[0]));
+            } else if (i > 1 && random.check(15)) {
+                phrases.push(variationOfPhrase(random.getRandomElementOfArray(phrases)));
             } else {
                 phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
             }
