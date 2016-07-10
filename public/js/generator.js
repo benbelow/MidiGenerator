@@ -8,7 +8,7 @@ var helpers = require('./helpers.js');
 var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
 var durationsInTwelfthBeats = {"1": 48, "2": 24, "d2": 36, "4": 12, "d4": 18, "8": 6, "8t": 4, "d8": 9, "16": 3};
-var weightedDurations = {"1": 2, "2": 12, "d2": 6, "4": 22, "d4": 12, "8": 15, "8t": 9, "d8": 3, "16": 10};
+var weightedDurations = {"1": 2, "2": 12, "d2": 6, "4": 22, "d4": 12, "8": 15, "8t": 12, "d8": 3, "16": 10};
 var ionianSteps = [2, 2, 1, 2, 2, 2];
 var dorianSteps = [2, 1, 2, 2, 2, 1];
 var phrygianSteps = [1, 2, 2, 2, 1, 2];
@@ -69,13 +69,13 @@ exports.generateMelody = function generateMelody() {
 
     var chorus = generateSection(random.getRandomElementOfArray([2, 3, 4]), chorusSequence);
 
-    playSection(generateSection(random.getRandomElementOfArray([2, 3, 4, 5, 6, 7, 8]), sequence));
+    playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence));
     playSection(chorus);
     playSection(chorus);
-    playSection(generateSection(random.getRandomElementOfArray([2, 3, 4, 5, 6, 7, 8]), sequence));
+    playSection(generateSection(random.getRandomElementOfArray([4,8]), sequence));
     playSection(chorus);
     playSection(chorus);
-    playSection(generateSection(random.getRandomElementOfArray([2, 3, 4, 5, 6, 7, 8]), sequence));
+    playSection(generateSection(random.getRandomElementOfArray([4,8]), sequence));
     playSection(chorus);
 
 
@@ -95,6 +95,15 @@ exports.generateMelody = function generateMelody() {
         var numberOfTwelfthBeats = numberOfBeats * 12;
         var durations = [];
         var sumOfDurations = 0;
+        if(random.check(10)){
+            //occasionally, all the same!
+            var singleDuration = getRandomWeightedDurationDivisibleByFortyEight();
+            var repetitions = 48 / durationsInTwelfthBeats[singleDuration];
+            for(var i=0; i<repetitions;i++){
+                durations.push(singleDuration);
+            }
+            return durations;
+        }
         while (sumOfDurations < numberOfTwelfthBeats) {
             if (numberOfTwelfthBeats - sumOfDurations == 5 || numberOfTwelfthBeats - sumOfDurations < 3) {
                 //Gone wrong, start again. There's probably a better algorithm than this, but hey it's really late, ok.
@@ -284,17 +293,38 @@ exports.generateMelody = function generateMelody() {
     }
 
     function sumOfDurationWeights() {
-        var weightedDurationValues = Object.keys(weightedDurations);
-        var totalWeight = 0;
-        for (var i in weightedDurationValues) {
-            totalWeight += weightedDurations[weightedDurationValues[i]];
+        return sumOfWeights(weightedDurations);
+    }
+
+    function sumOfWeights(weightMap){
+        var weightValues = Object.keys(weightMap);
+        var total = 0;
+        for(var i=0; i<weightValues.length; i++){
+            total += weightMap[weightValues[i]];
         }
-        return totalWeight;
+        return total;
     }
 
     function getRandomWeightedDuration() {
         var weightedDurationValues = Object.keys(weightedDurations);
         var sumOfWeights = sumOfDurationWeights();
+        var randomWeight = random.getRandomNumberInRange(0, sumOfWeights);
+        var currentTotal = 0;
+        for (var i = 0; i < weightedDurationValues.length; i++) {
+            currentTotal += weightedDurations[weightedDurationValues[i]];
+            if (randomWeight <= currentTotal) {
+                return weightedDurationValues[i];
+            }
+        }
+    }
+    function getRandomWeightedDurationDivisibleByFortyEight() {
+        var weightedDurationValues = Object.keys(weightedDurations).filter(function(x){return (48 % durationsInTwelfthBeats[x] == 0) });
+        var sumOfWeights =0;
+
+        for (var i = 0; i < weightedDurationValues.length; i++) {
+            sumOfWeights += weightedDurations[weightedDurationValues[i]];
+        }
+
         var randomWeight = random.getRandomNumberInRange(0, sumOfWeights);
         var currentTotal = 0;
         for (var i = 0; i < weightedDurationValues.length; i++) {
