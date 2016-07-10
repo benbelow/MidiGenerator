@@ -106,11 +106,11 @@ exports.Scale = function (steps, root) {
 
     // ToDo: this is almost the same algorithm as note.transpose. Commonise?
     this.scaleTranspose = function (pitch, interval) {
-        if (interval > 12) {
-            return this.scaleTranspose(pitch, 12).scaleTranspose(pitch, interval - 12);
+        if (interval > this.scalePitches.length - 1) {
+            return this.scaleTranspose(this.scaleTranspose(pitch, this.scalePitches.length-1), interval - this.scalePitches.length-1);
         }
-        if (interval < -12) {
-            return this.scaleTranspose(pitch, -12).scaleTranspose(pitch, interval + 12);
+        if (interval < -(this.scalePitches.length - 1)) {
+            return this.scaleTranspose(this.scaleTranspose(pitch, -1 * (this.scalePitches.length - 1)), interval + this.scalePitches.length-1);
         }
         var scaleIndex = this.scaleNotes().indexOf(pitch.note);
         if (scaleIndex == -1) {
@@ -144,11 +144,12 @@ exports.Scale = function (steps, root) {
         var absolutePitchInterval = pitch1.interval(pitch2);
 
         if (Math.abs(absolutePitchInterval) > 12) {
-            throw("!");
+            // not sure about this
+            var sign = helpers.sign(absolutePitchInterval);
+            return (sign * this.scalePitches.length) + this.getScaleInterval(pitch1, pitch2.transpose(12 * -sign));
         } else if (helpers.sign(absolutePitchInterval) != helpers.sign(pitchDifference)){
             pitchDifference = (this.scalePitches.length - Math.abs(pitchDifference)) * helpers.sign(absolutePitchInterval);
         }
-
         return pitchDifference;
     };
 
