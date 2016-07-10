@@ -69,7 +69,7 @@ exports.generateMelody = function generateMelody() {
 
     var chorus = generateSection(random.getRandomElementOfArray([2, 3, 4]), chorusSequence);
 
-    playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence));
+    playSection(generateSection(random.getRandomElementOfArray([4,8]), sequence));
     playSection(chorus);
     playSection(chorus);
     playSection(generateSection(random.getRandomElementOfArray([4,8]), sequence));
@@ -244,7 +244,9 @@ exports.generateMelody = function generateMelody() {
     function generateSection(beatsPerPhrase, sequence) {
         var phrases = [];
 
-        var ABABSection = random.check(85) && sequence.length >= 4;
+        var ABABSection = random.check(25) && sequence.length >= 4;
+        var AABBSection = random.check(25) && sequence.length >= 4;
+        var AABASection = random.check(25) && sequence.length >= 4;
 
         function generateABABSection(beatsPerPhrase, sequence) {
             var phrases = [];
@@ -260,9 +262,46 @@ exports.generateMelody = function generateMelody() {
             return phrases;
         }
 
-        if(ABABSection){
-            phrases = generateABABSection(beatsPerPhrase, sequence);
+        function generateAABBSection(beatsPerPhrase, sequence) {
+            var phrases = [];
+            for (var i = 0; i < sequence.length; i++) {
+                if (i == 1) {
+                    phrases.push(variationOfPhrase(phrases[0]));
+                } else if (i == 3){
+                    phrases.push(variationOfPhrase(phrases[2]));
+                } else {
+                    phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
+                }
+            }
+            return phrases;
         }
+
+        function generateAABASection(beatsPerPhrase, sequence) {
+            var phrases = [];
+            for (var i = 0; i < sequence.length; i++) {
+                if (i == 1 || i== 3) {
+                    phrases.push(variationOfPhrase(phrases[0]));
+                } else {
+                    phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
+                }
+            }
+            return phrases;
+        }
+
+        if(ABABSection){
+            console.log("ABAB");
+            return generateABABSection(beatsPerPhrase, sequence);
+        }
+        if(AABBSection){
+            console.log("AABB");
+            return generateAABBSection(beatsPerPhrase, sequence);
+        }
+        if(AABASection){
+            console.log("AABA");
+            return generateAABBSection(beatsPerPhrase, sequence);
+        }
+
+        console.log("not A/B structured");
 
         for (var i = 0; i < sequence.length; i++) {
             if (i == 1 && random.check(75)) {
