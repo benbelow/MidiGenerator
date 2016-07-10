@@ -64,15 +64,20 @@ exports.generateMelody = function generateMelody() {
     }));
     var scale = new scales.Scale(mode, root);
 
-    var sequence = new chords.generateSequence(scale, 8);
-    var chorusSequence = new chords.generateSequence(scale, 4);
+    var sequence = new chords.generateSequence(scale, random.getRandomElementOfArray([2, 4, 8]));
+    var chorusSequence = new chords.generateSequence(scale, random.getRandomElementOfArray([2, 4]));
 
-    var chorus = generateSection(2, chorusSequence);
-    playSection(generateSection(8, sequence));
+    var chorus = generateSection(random.getRandomElementOfArray([2, 3, 4]), chorusSequence);
+
+    playSection(generateSection(random.getRandomElementOfArray([2, 3, 4, 5, 6, 7, 8]), sequence));
     playSection(chorus);
-    playSection(generateSection(4, sequence));
     playSection(chorus);
-    playSection(generateSection(12, [scale.tonicChord()]));
+    playSection(generateSection(random.getRandomElementOfArray([2, 3, 4, 5, 6, 7, 8]), sequence));
+    playSection(chorus);
+    playSection(chorus);
+    playSection(generateSection(random.getRandomElementOfArray([2, 3, 4, 5, 6, 7, 8]), sequence));
+    playSection(chorus);
+
 
 
     track.addEvent(midiChord(scale.tonicChord().chordNotes(), "1"));
@@ -97,8 +102,8 @@ exports.generateMelody = function generateMelody() {
             }
             var durationToAdd = getRandomWeightedDuration();
             var durationToAddInFortyEighths = durationsInTwelfthBeats[durationToAdd];
-            if(durations.length == 0){
-                var allowedDurations = ["2","4"];
+            if (durations.length == 0) {
+                var allowedDurations = ["2", "4"];
                 durationToAdd = random.getRandomElementOfArray(allowedDurations);
                 durationToAddInFortyEighths = durationsInTwelfthBeats[durationToAdd];
             }
@@ -129,9 +134,11 @@ exports.generateMelody = function generateMelody() {
             } else if (i > 1) {
                 var lastInterval = helpers.lastItemInList(scale.scaleIntervals(pitches));
                 if (0 < lastInterval && lastInterval < 3 && random.check(55)) {
-                    pitch = scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(1, 2));
+                    pitch = random.check(75) ? scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(1, 2))
+                        : scale.scaleTranspose(helpers.lastItemInList(pitches), -random.getRandomNumberInRange(1, 2));
                 } else if (-3 < lastInterval && lastInterval < 0 && random.check(55)) {
-                    pitch = scale.scaleTranspose(helpers.lastItemInList(pitches), -random.getRandomNumberInRange(1, 2));
+                    pitch = random.check(75) ? scale.scaleTranspose(helpers.lastItemInList(pitches), -random.getRandomNumberInRange(1, 2))
+                        : scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(1, 2));
                 } else if (lastInterval > 3 && random.check(80)) {
                     pitch = scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(1, 3));
                 } else if (lastInterval < -3 && random.check(80)) {
@@ -139,16 +146,21 @@ exports.generateMelody = function generateMelody() {
                 }
             }
             if (pitch == undefined) {
-                if(scale.scaleIntervals(pitches).some(function(x){return Math.abs(x) > 5})){
-                    pitch = scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(-4,4));
+                var jumpRange = 6;
+                if (scale.scaleIntervals(pitches).some(function (x) {
+                        return Math.abs(x) > 5
+                    })) {
+                    jumpRange = 4;
+                } else if(random.check(60)){
+                    jumpRange = 3;
                 }
-                pitch = scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(-6,6));
+                pitch = scale.scaleTranspose(helpers.lastItemInList(pitches), random.getRandomNumberInRange(-jumpRange, jumpRange));
             }
-            var deviationFromRoot = scale.getScaleInterval(chord.chordNotes()[0], pitch);
-            if(Math.abs(deviationFromRoot) > maxDeviation){
+            var deviationFromRoot = scale.getScaleInterval(scale.root, pitch);
+            if (Math.abs(deviationFromRoot) > maxDeviation) {
                 var minimumFix = Math.abs(deviationFromRoot) - maxDeviation;
                 var maximumFix = Math.abs(deviationFromRoot) + maxDeviation;
-                var toTranspose = random.getRandomNumberInRange(minimumFix,maximumFix) * -helpers.sign(deviationFromRoot);
+                var toTranspose = random.getRandomNumberInRange(minimumFix, maximumFix) * -helpers.sign(deviationFromRoot);
                 pitch = scale.scaleTranspose(pitch, toTranspose);
             }
             pitches.push(pitch);
@@ -222,6 +234,27 @@ exports.generateMelody = function generateMelody() {
 
     function generateSection(beatsPerPhrase, sequence) {
         var phrases = [];
+
+        var ABABSection = random.check(85) && sequence.length >= 4;
+
+        function generateABABSection(beatsPerPhrase, sequence) {
+            var phrases = [];
+            for (var i = 0; i < sequence.length; i++) {
+                if (i == 2) {
+                    phrases.push(phrases[0]);
+                } else if (i == 3){
+                    phrases.push(variationOfPhrase(phrases[1]));
+                } else {
+                    phrases.push(generatePhrase(beatsPerPhrase, sequence[i]));
+                }
+            }
+            return phrases;
+        }
+
+        if(ABABSection){
+            phrases = generateABABSection(beatsPerPhrase, sequence);
+        }
+
         for (var i = 0; i < sequence.length; i++) {
             if (i == 1 && random.check(75)) {
                 phrases.push(variationOfPhrase(phrases[0]));
@@ -242,7 +275,7 @@ exports.generateMelody = function generateMelody() {
 
     function playPhrase(phrase) {
         for (var i = 0; i < phrase.durations.length; i++) {
-            if (i == 0) {
+            if (i == 0 && random.check(100)) {
                 track.addEvent(midiChord(phrase.chord.chordNotes(), phrase.durations[i]));
             } else {
                 track.addEvent(midiNote(phrase.pitches[i], phrase.durations[i]));
