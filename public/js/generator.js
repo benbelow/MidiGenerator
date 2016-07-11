@@ -8,7 +8,7 @@ var helpers = require('./helpers.js');
 var NOTES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "G#", "A", "Bb", "B"];
 var DURATIONS = ["1", "2", "d2", "4", "d4", "8", "8t", "d8", "16"];
 var durationsInTwelfthBeats = {"1": 48, "2": 24, "d2": 36, "4": 12, "d4": 18, "8": 6, "8t": 4, "d8": 9, "16": 3};
-var weightedDurations = {"1": 2, "2": 12, "d2": 6, "4": 22, "d4": 12, "8": 15, "8t": 15, "d8": 3, "16": 10};
+var weightedDurations = {"1": 2, "2": 8, "d2": 6, "4": 22, "d4": 12, "8": 15, "8t": 9, "d8": 3, "16": 6};
 var ionianSteps = [2, 2, 1, 2, 2, 2];
 var dorianSteps = [2, 1, 2, 2, 2, 1];
 var phrygianSteps = [1, 2, 2, 2, 1, 2];
@@ -30,7 +30,7 @@ modes = {
 var chanceOfABABSections = 35;
 var chanceOfAABBSections = 25;
 var chanceOfAABASections = 25;
-var chanceOfRepeatedDurationForWholeBar = 10;
+var chanceOfRepeatedDurationForWholeBar = 4;
 var chanceOfRisingOrFallingMelodyContinuing = 80;
 var chanceOfRisingMelodyContinuing = chanceOfRisingOrFallingMelodyContinuing;
 var chanceOfFallingMelodyContinuing = chanceOfRisingOrFallingMelodyContinuing;
@@ -38,9 +38,9 @@ var chanceOfContinuedMelodySwappingDirection = 50;
 var chanceOfLargePitchJumpChangingDirection = 85;
 var chanceOfPitchJumpBeingSmall = 60;
 var chanceOfVariationAffectingDurationInsteadOfMelody = 20;
-var chanceOfVariationChangingTheChord = 60;
+var chanceOfVariationChangingTheChord = 5;
 var chanceOfSecondPhraseBeingVariant = 75;
-var chanceOfLaterPhraseBeingVariant = 15;
+var chanceOfLaterPhraseBeingVariant = 3;
 var chanceOfPlayingChordOnFirstNoteOfPhrase = 100;
 
 var maxDeviationFromRoot = 10;
@@ -83,13 +83,13 @@ exports.generateMelody = function generateMelody() {
     }));
     var scale = new scales.Scale(mode, root);
 
-    var sequence = new chords.generateSequence(scale, random.getRandomElementOfArray([2, 4, 8]));
+    var sequence = new chords.generateSequence(scale, random.getRandomElementOfArray([4, 8]));
     var chorusSequence = new chords.generateSequence(scale, random.getRandomElementOfArray([2, 4]));
 
-    var chorus1 = generateSection(random.getRandomElementOfArray([2, 3, 4]), chorusSequence);
+    var chorus1 = generateSection(random.getRandomElementOfArray([2,4]), chorusSequence);
     var chorus2 = variationOfSection(chorus1);
 
-    playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence));
+    playSection(generateSection(random.getRandomElementOfArray([4, 8,12]), sequence));
     playSection(chorus1);
     playSection(chorus2);
     playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence));
