@@ -84,6 +84,7 @@ exports.generateMelody = function generateMelody() {
     var scale = new scales.Scale(mode, root);
 
     var sequence = new chords.generateSequence(scale, random.getRandomElementOfArray([4, 8]));
+    var sequence2 = new chords.generateSequence(scale, random.getRandomElementOfArray([4, 8]));
     var chorusSequence = new chords.generateSequence(scale, random.getRandomElementOfArray([2, 4]));
 
     var chorus1 = generateSection(random.getRandomElementOfArray([2,4]), chorusSequence);
@@ -92,7 +93,7 @@ exports.generateMelody = function generateMelody() {
     playSection(generateSection(random.getRandomElementOfArray([4, 8,12]), sequence));
     playSection(chorus1);
     playSection(chorus2);
-    playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence));
+    playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence2));
     playSection(chorus1);
     playSection(chorus2);
     playSection(generateSection(random.getRandomElementOfArray([4, 8]), sequence));

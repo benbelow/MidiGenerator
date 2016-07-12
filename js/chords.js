@@ -32,7 +32,8 @@ exports.fromName = function (root, chordType) {
 };
 
 exports.generateSequence = function(scale, length){
-    var chords = [scale.tonicChord()];
+    var initialChord = random.check(80) ? scale.tonicChord() : scale.dominantChord();
+    var chords = [initialChord];
     for(var i=0; i<length-1; i++){
         var lastChord = helpers.lastItemInList(chords);
         var allowedChords = [];
