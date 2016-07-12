@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/benbelow/MidiGenerator/issues"
   },
-  "homepage": "https://github.com/benbelow/MidiGenerator"
+  "homepage": "https://github.com/benbelow/MidiGenerator",
+  "engines": {
+    "node": "4.1.1"
+  }
 }
