@@ -43,7 +43,7 @@ var chanceOfSecondPhraseBeingVariant = 75;
 var chanceOfLaterPhraseBeingVariant = 3;
 var chanceOfPlayingChordOnFirstNoteOfPhrase = 100;
 
-var maxDeviationFromRoot = 10;
+var maxDeviationFromRoot = 8;
 
 
 function midiNote(note, duration) {
@@ -72,6 +72,22 @@ function midiRest(duration) {
         pitch: ["C1"], duration: "0", wait: duration, sequential: false
     });
 }
+
+exports.generateChordSequence = function generateChordSequence() {
+    var track = new MidiWriter.Track();
+    track.setTempo(120);
+    var root = new notes.Pitch(random.getRandomElementOfArray(NOTES), 3);
+    var mode = modes["Mixolydian"];
+    var scale = new scales.Scale(mode, root);
+
+    var sequence = new chords.generateSequence(scale, random.getRandomElementOfArray([4,6,8,12]));
+    for(var i=0; i<sequence.length; i++){
+        track.addEvent(midiChord(sequence[i].chordNotes(), "2"));
+    }
+
+    var write = new MidiWriter.Writer([track]);
+    return 'data:audio/midi;base64,' + write.base64();
+};
 
 exports.generateMelody = function generateMelody() {
     var track = new MidiWriter.Track();
@@ -318,19 +334,15 @@ exports.generateMelody = function generateMelody() {
         }
 
         if (ABABSection) {
-            console.log("ABAB");
             return generateABABSection(beatsPerPhrase, sequence);
         }
         if (AABBSection) {
-            console.log("AABB");
             return generateAABBSection(beatsPerPhrase, sequence);
         }
         if (AABASection) {
-            console.log("AABA");
             return generateAABASection(beatsPerPhrase, sequence);
         }
 
-        console.log("not A/B structured");
 
         for (var i = 0; i < sequence.length; i++) {
             if (i == 1 && random.check(chanceOfSecondPhraseBeingVariant)) {

@@ -21,6 +21,14 @@ function onRequest(request, response) {
             result: result
         }));
         response.end();
+    } else if (request.method === 'POST' && request.url == '/generateChords') {
+
+        var result = generator.generateChordSequence(request.body);
+        response.writeHead(200, {"Context-Type": "application/json"});
+        response.write(JSON.stringify({
+            result: result
+        }));
+        response.end();
     } else if (request.url == "/js/client.js") {
         var script = fs.readFileSync("js/client.js", "utf8");
         response.write(script);
